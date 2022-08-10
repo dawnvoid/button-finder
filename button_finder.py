@@ -6,7 +6,7 @@ import requests.exceptions
 import bs4
 from PIL import ImageFile
 
-FLAG_VERBOSE: bool = True
+FLAG_VERBOSE: bool = False
 
 def get_image_size(image_url: str) -> int:
     result = None
@@ -43,7 +43,8 @@ def get_parent_url(url: str):
 
 def find_links_in_js(js_contents: str) -> list[str]:
     results = []
-    print(js_contents)
+    if FLAG_VERBOSE:
+        print(js_contents)
     return results
 
 def process_page(url: str):
@@ -72,10 +73,10 @@ def process_page(url: str):
         # with open(file_path, "wb") as binary_file:
         #     binary_file.write(response.content)
 
-        if url.endswith('.js'):
-            print(f'{url} is a javascript file')
+        # if url.endswith('.js'):
+        #     print(f'{url} is a javascript file')
 
-            return [], [], []
+        #     return [], [], []
 
         html = response.text
         soup = bs4.BeautifulSoup(response.content, 'html.parser')
@@ -160,7 +161,8 @@ def process_site(url: str):
         page = frontier.pop(0)
         checked_pages.append(page)
 
-        print(f'Checking {page}... {len(checked_pages)}/{len(frontier) + len(checked_pages)}')
+        # print(f'Checking {page}... {len(checked_pages)}/{len(frontier) + len(checked_pages)}')
+        print(f'Checking {page}...')
 
         try:
             links, images, scripts = process_page(page)
@@ -179,29 +181,30 @@ def process_site(url: str):
                 if not script in total_scripts:
                     total_scripts.append(script)
 
-            print('\tLinks:')
-            if len(links) == 0:
-                print('\tNone')
-            else:
-                for link in links:
-                    print(f'\t{link}')
-            print()
+            if FLAG_VERBOSE:
+                print('\tLinks:')
+                if len(links) == 0:
+                    print('\tNone')
+                else:
+                    for link in links:
+                        print(f'\t{link}')
+                print()
 
-            print('\tImages:')
-            if len(images) == 0:
-                print('\tNone')
-            else:
-                for image in images:
-                    print(f'\t{image}')
-            print()
+                print('\tImages:')
+                if len(images) == 0:
+                    print('\tNone')
+                else:
+                    for image in images:
+                        print(f'\t{image}')
+                print()
 
-            print('\tScripts:')
-            if len(scripts) == 0:
-                print('\tNone')
-            else:
-                for script in scripts:
-                    print(f'\t{script}')
-            print()
+                print('\tScripts:')
+                if len(scripts) == 0:
+                    print('\tNone')
+                else:
+                    for script in scripts:
+                        print(f'\t{script}')
+                print()
 
             # Add pages to the frontier.
             for link in links:
@@ -219,7 +222,8 @@ def process_site(url: str):
                 frontier.append(link)
 
             # TODO: Do this in parallel when there's a lot of images, it's too slow.
-            print('\tPotential buttons:')
+            if FLAG_VERBOSE:
+                print('\tPotential buttons:')
             for image in images:
                 image_size = get_image_size(image)
                 if image_size is None:
@@ -232,7 +236,8 @@ def process_site(url: str):
                 if image_dimensions == (88, 31):
                     if image not in buttons:
                         buttons.append(image)
-                    print(f'\t{image}')
+                    if FLAG_VERBOSE:
+                        print(f'\t{image}')
             
             for script in scripts:
                 response = requests.get(script)
@@ -265,18 +270,18 @@ def process_site(url: str):
         print(checked_page)
     print()
 
-    print('Possible buttons:')
+    print(f'Possible buttons ({len(buttons)}):')
     for button in buttons:
         print(f'{button}')
     print()
 
 
-# url = 'https://dawnvoid.neocities.org'
+url = 'https://dawnvoid.neocities.org'
 # url = 'https://dawnvoid.neocities.org/home.html'
 # url = 'https://dawnvoid.neocities.org/page/media/media.html'
 # url = 'https://dawnvoid.neocities.org/page/buttons/buttons.html'
 # url = 'https://koyo.neocities.org/koy19/home.html'
-url = 'https://fauux.neocities.org'
+# url = 'https://fauux.neocities.org'
 # url = 'https://google.com'
 # url = 'https://wikipedia.org/'
 # url = 'https://dawnvoid.neocities.org/assets/angel.gif'
@@ -297,10 +302,3 @@ process_site(url)
 
 # https?:\/\/|\/?[A-Za-z0-9\.\-\_]+\.[A-Za-z0-9\.\-\_]+
 # ["'](https:\/\/[A-Za-z0-9\.\-\_\/]+\.[A-Za-z0-9\.\-\_\/]+\.[A-Za-z0-9]+)['"]
-
-test = "https://dawnvoid.neocities.org/page/terminal/terminal.html"
-while len(test) > 0:
-    if test[-1] == '/':
-        break
-    test = test[:-1]
-print(test)
