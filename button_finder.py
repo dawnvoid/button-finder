@@ -106,7 +106,6 @@ def process_page(url: str):
         
         images = []
         image_tags = soup.find_all('img')
-        print(len(image_tags))
         for image_tag in image_tags:
             if not image_tag.has_attr('src'):
                 continue
@@ -157,6 +156,8 @@ def process_image(url: str):
     pass
 
 def process_site(url: str):
+    if not url.endswith('/'):
+        url = url + '/'
     root_url = get_root_url(url)
 
     frontier = [url]
