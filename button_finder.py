@@ -6,7 +6,7 @@ import requests.exceptions
 import bs4
 from PIL import ImageFile
 
-FLAG_VERBOSE: bool = True
+FLAG_VERBOSE: bool = False
 
 def get_image_size(image_url: str) -> int:
     result = None
@@ -168,10 +168,24 @@ def process_site(url: str):
     while len(frontier) > 0:
         # page = frontier.pop()
         current_url = frontier.pop(0)
+
+        if current_url in checked_pages:
+            continue
+
+        # current_url = urllib.parse.urljoin('https://', current_url)
         checked_pages.append(current_url)
 
         # print(f'Checking {page}... {len(checked_pages)}/{len(frontier) + len(checked_pages)}')
         print(f'Checking {current_url}...')
+
+        print('\tFrontier:')
+        for item in frontier:
+            print(f'\t{item}')
+        print()
+        print('\tChecked pages:')
+        for item in checked_pages:
+            print(f'\t{item}')
+        print()
 
         def endswith_any(url: str, extensions: list[str]):
             for extension in extensions:
@@ -312,8 +326,9 @@ def process_site(url: str):
 # url = 'https://dawnvoid.neocities.org/page/buttons/buttons.html'
 # url = 'https://koyo.neocities.org/koy19/home.html'
 # url = 'https://fauux.neocities.org'
-# url = 'https://scarbyte.com'
-url = 'https://hosma.neocities.org'
+url = 'https://scarbyte.com'
+# url = 'https://kry.pt'
+# url = 'https://hosma.neocities.org'
 # url = 'https://google.com'
 # url = 'https://wikipedia.org/'
 # url = 'https://dawnvoid.neocities.org/assets/angel.gif'
