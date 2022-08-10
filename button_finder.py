@@ -6,7 +6,8 @@ import requests.exceptions
 import bs4
 from PIL import ImageFile
 
-FLAG_VERBOSE: bool = False
+FLAG_VERBOSE: bool = True
+FLAG_DEBUG: bool = False
 
 def get_image_size(image_url: str) -> int:
     result = None
@@ -105,6 +106,7 @@ def process_page(url: str):
         
         images = []
         image_tags = soup.find_all('img')
+        print(len(image_tags))
         for image_tag in image_tags:
             if not image_tag.has_attr('src'):
                 continue
@@ -178,14 +180,15 @@ def process_site(url: str):
         # print(f'Checking {page}... {len(checked_pages)}/{len(frontier) + len(checked_pages)}')
         print(f'Checking {current_url}...')
 
-        print('\tFrontier:')
-        for item in frontier:
-            print(f'\t{item}')
-        print()
-        print('\tChecked pages:')
-        for item in checked_pages:
-            print(f'\t{item}')
-        print()
+        if FLAG_DEBUG:
+            print('\tFrontier:')
+            for item in frontier:
+                print(f'\t{item}')
+            print()
+            print('\tChecked pages:')
+            for item in checked_pages:
+                print(f'\t{item}')
+            print()
 
         def endswith_any(url: str, extensions: list[str]):
             for extension in extensions:
@@ -207,7 +210,6 @@ def process_site(url: str):
             process_image(current_url)
         elif endswith_any(current_url, ['.html', '.htm', '.com', '.org', '.net']) or not has_extension(current_url):
             # This is probably an html file.
-            print('HTML FILE')
             try:
                 links, images, scripts = process_page(current_url)
             except requests.exceptions.HTTPError as http_error:
@@ -326,8 +328,8 @@ def process_site(url: str):
 # url = 'https://dawnvoid.neocities.org/page/buttons/buttons.html'
 # url = 'https://koyo.neocities.org/koy19/home.html'
 # url = 'https://fauux.neocities.org'
-url = 'https://scarbyte.com'
-# url = 'https://kry.pt'
+# url = 'https://scarbyte.com'
+url = 'https://kry.pt'
 # url = 'https://hosma.neocities.org'
 # url = 'https://google.com'
 # url = 'https://wikipedia.org/'
@@ -349,11 +351,3 @@ process_site(url)
 
 # https?:\/\/|\/?[A-Za-z0-9\.\-\_]+\.[A-Za-z0-9\.\-\_]+
 # ["'](https:\/\/[A-Za-z0-9\.\-\_\/]+\.[A-Za-z0-9\.\-\_\/]+\.[A-Za-z0-9]+)['"]
-
-url = 'https://dawnvoid.neocities.org/page/./'
-result = urllib.parse.urljoin(url, './terminal/terminal.html/#')
-print(result)
-
-url = 'https://dawnvoid.neocities.org/page/./terminal/terminal.html'
-result = urllib.parse.urljoin(url, 'test.gif')
-print(result)
