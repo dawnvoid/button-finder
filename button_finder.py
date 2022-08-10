@@ -1,21 +1,27 @@
 # Use base conda env for now.
 
+import sys
 import urllib.parse
 import requests
 import requests.exceptions
 import bs4
 from PIL import ImageFile
+# import multiprocessing
 
-FLAG_VERBOSE: bool = True
+FLAG_VERBOSE: bool = False
 FLAG_DEBUG: bool = False
 
 def get_image_size(image_url: str) -> int:
     result = None
-    # Gets the filesize in bytes of an image:
-    data = requests.get(image_url, stream = True)
-    if 'Content-length' in data.headers:
-        result = data.headers['Content-length']
-        result = int(result)
+    try:
+        # Gets the filesize in bytes of an image:
+        data = requests.get(image_url, stream = True)
+    except requests.sessions.InvalidSchema as err:
+        print(f'ERROR: Could not determine size of image {image_url} ({err})')
+    else:
+        if 'Content-length' in data.headers:
+            result = data.headers['Content-length']
+            result = int(result)
     return result
 
 def get_image_dimensions(image_url: str) -> tuple[int, int]:
@@ -62,6 +68,19 @@ def find_links_in_js(js_contents: str) -> list[str]:
     # if FLAG_VERBOSE:
         # print(js_contents)
     return results
+
+def is_button(url: str):
+    image_size = get_image_size(url)
+    if image_size is None:
+        # Image size is unknown
+        return False
+    elif image_size >= 500000: # < 5kb is reasonable right?
+        # Image is too big
+        return False
+    image_dimensions = get_image_dimensions(url)
+    if image_dimensions == (88, 31):
+        return True
+    return False
 
 def process_page(url: str):
     root_url = get_root_url(url)
@@ -206,7 +225,7 @@ def process_site(url: str):
     total_links: list[str] = []
     total_images: list[str] = []
     total_scripts: list[str] = []
-    buttons: list[str] = []
+    total_buttons: list[str] = []
 
     while len(frontier) > 0:
         # page = frontier.pop()
@@ -294,32 +313,25 @@ def process_site(url: str):
                     frontier.append(link)
 
                 # TODO: Do this in parallel when there's a lot of images, it's too slow.
-                if FLAG_VERBOSE:
-                    print('\tPotential buttons:')
+                buttons = []
                 for image in images:
-                    image_size = get_image_size(image)
-                    if image_size is None:
-                        # Image size is unknown
-                        continue
-                    elif image_size >= 500000: # < 5kb is reasonable right?
-                        # Image is too big
-                        continue
-                    image_dimensions = get_image_dimensions(image)
-                    if image_dimensions == (88, 31):
-                        if image not in buttons:
-                            buttons.append(image)
-                        if FLAG_VERBOSE:
-                            print(f'\t{image}')
+                    if is_button(image):
+                        buttons.append(image)
+                
+                for button in buttons:
+                    if not button in total_buttons:
+                        total_buttons.append(button)
+
+                if FLAG_VERBOSE:
+                    print(f'\tPotential buttons ({len(buttons)}):')
+                    for button in buttons:
+                        print(f'\t{image}')
                 
                 for script in scripts:
                     response = requests.get(script)
                     js = response.text
                     find_links_in_js(js)
 
-                # print(f'Possible buttons in {page}')
-                # for button in buttons:
-                #     print(f'{button}')
-                # print()
     print('Done!')
     print()
     
@@ -342,25 +354,29 @@ def process_site(url: str):
         print(checked_page)
     print()
 
-    print(f'Possible buttons ({len(buttons)}):')
-    for button in buttons:
+    print(f'Possible buttons ({len(total_buttons)}):')
+    for button in total_buttons:
         print(f'{button}')
     print()
 
 
-# url = 'https://dawnvoid.neocities.org'
+url = 'https://dawnvoid.neocities.org'
 # url = 'https://dawnvoid.neocities.org/home.html'
 # url = 'https://dawnvoid.neocities.org/page/media/media.html'
 # url = 'https://dawnvoid.neocities.org/page/buttons/buttons.html'
 # url = 'https://koyo.neocities.org/koy19/home.html'
 # url = 'https://fauux.neocities.org'
 # url = 'https://scarbyte.com'
-url = 'https://kry.pt'
+# url = 'https://kry.pt'
 # url = 'https://hosma.neocities.org'
 # url = 'https://google.com'
 # url = 'https://wikipedia.org/'
 # url = 'https://dawnvoid.neocities.org/assets/angel.gif'
+# url = 'https://arandomsite.neocities.org'
 # url = 'http://127.0.0.1:5500/tests/test.html' # Tests don't work right now, won't connect to localhost :/
+
+if len(sys.argv) > 1:
+    url = sys.argv[1]
 process_site(url)
 
 # response = requests.get(url)
