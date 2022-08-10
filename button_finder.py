@@ -6,7 +6,7 @@ import requests.exceptions
 import bs4
 from PIL import ImageFile
 
-FLAG_VERBOSE: bool = False
+FLAG_VERBOSE: bool = True
 FLAG_DEBUG: bool = False
 
 def get_image_size(image_url: str) -> int:
@@ -72,7 +72,7 @@ def process_page(url: str):
         # Raise error if status != 200 (OK):
         response.raise_for_status()
     except requests.exceptions.HTTPError as http_error:
-        # print(f'ERROR: HTTP error occurred ({http_error})')
+        print(f'ERROR: HTTP error occurred ({http_error})')
         # Don't do anything lol.
         pass
     except Exception as exception:
@@ -160,6 +160,31 @@ def process_page(url: str):
             #     scripts.append(src)
             src = urllib.parse.urljoin(url, src)
             scripts.append(src)
+        
+        embed_tags = soup.find_all('embed')
+        for embed_tag in embed_tags:
+            if not embed_tag.has_attr('src'):
+                continue
+            src = embed_tag['src']
+            src = urllib.parse.urljoin(url, src)
+            links.append(src)
+        
+        object_tags = soup.find_all('object')
+        for object_tag in object_tags:
+            if not object_tag.has_attr('data'):
+                continue
+            data = object_tag['data']
+            data = urllib.parse.urljoin(url, data)
+            links.append(data)
+        
+        iframe_tags = soup.find_all('iframe')
+        for iframe_tag in iframe_tags:
+            if not iframe_tag.has_attr('src'):
+                continue
+            src = iframe_tag['src']
+            src = urllib.parse.urljoin(url, src)
+            links.append(src)
+
             
                     
             # print(f'{script_tag} {s1 = } {s2 = }')
@@ -330,12 +355,12 @@ def process_site(url: str):
 # url = 'https://koyo.neocities.org/koy19/home.html'
 # url = 'https://fauux.neocities.org'
 # url = 'https://scarbyte.com'
-# url = 'https://kry.pt'
+url = 'https://kry.pt'
 # url = 'https://hosma.neocities.org'
 # url = 'https://google.com'
 # url = 'https://wikipedia.org/'
 # url = 'https://dawnvoid.neocities.org/assets/angel.gif'
-url = 'http://127.0.0.1:5500/tests/test.html'
+# url = 'http://127.0.0.1:5500/tests/test.html' # Tests don't work right now, won't connect to localhost :/
 process_site(url)
 
 # response = requests.get(url)
@@ -353,3 +378,8 @@ process_site(url)
 
 # https?:\/\/|\/?[A-Za-z0-9\.\-\_]+\.[A-Za-z0-9\.\-\_]+
 # ["'](https:\/\/[A-Za-z0-9\.\-\_\/]+\.[A-Za-z0-9\.\-\_\/]+\.[A-Za-z0-9]+)['"]
+
+# response = requests.get(url)
+# print(response.text)
+# soup = bs4.BeautifulSoup(response.content, 'html.parser')
+# print(soup.find_all('a'))
