@@ -6,7 +6,7 @@ import requests.exceptions
 import bs4
 from PIL import ImageFile
 
-FLAG_VERBOSE: bool = True
+FLAG_VERBOSE: bool = False
 FLAG_DEBUG: bool = False
 
 def get_image_size(image_url: str) -> int:
@@ -41,6 +41,21 @@ def get_parent_url(url: str):
             break
         url = url[:-1]
     return url
+
+def endswith_any(url: str, extensions: list[str]):
+    for extension in extensions:
+        if url.endswith(extension):
+            return True
+    return False
+
+def has_extension(url: str):
+    while len(url) > 0:
+        if url[-1] == '/':
+            return False
+        elif url[-1] == '.':
+            return True
+        url = url[:-1]
+    return False
 
 def find_links_in_js(js_contents: str) -> list[str]:
     results = []
@@ -190,21 +205,6 @@ def process_site(url: str):
             for item in checked_pages:
                 print(f'\t{item}')
             print()
-
-        def endswith_any(url: str, extensions: list[str]):
-            for extension in extensions:
-                if url.endswith(extension):
-                    return True
-            return False
-        
-        def has_extension(url: str):
-            while len(url) > 0:
-                if url[-1] == '/':
-                    return False
-                elif url[-1] == '.':
-                    return True
-                url = url[:-1]
-            return False
         
         if endswith_any(current_url, ['.png', '.jpg', 'jpeg', '.gif', '.bmp', '.tiff', '.webp']):
             # This is probably an image file.
@@ -330,11 +330,12 @@ def process_site(url: str):
 # url = 'https://koyo.neocities.org/koy19/home.html'
 # url = 'https://fauux.neocities.org'
 # url = 'https://scarbyte.com'
-url = 'https://kry.pt'
+# url = 'https://kry.pt'
 # url = 'https://hosma.neocities.org'
 # url = 'https://google.com'
 # url = 'https://wikipedia.org/'
 # url = 'https://dawnvoid.neocities.org/assets/angel.gif'
+url = 'http://127.0.0.1:5500/tests/test.html'
 process_site(url)
 
 # response = requests.get(url)
